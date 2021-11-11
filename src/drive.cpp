@@ -14,9 +14,9 @@ pros::Motor leftFront(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_
 pros::Motor leftBack(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines back motor on the left side of the drive base
 pros::Motor leftArm(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);//defines left motor on the arm
 pros::Motor rightArm(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines right motor on the leftArm
-pros::Motor intake(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);//
-pros::Motor backClaw(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);//
-pros::pneumatic pneumatic1(1, pros::);
+pros::Motor intake(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines motor that runs the intake
+pros::Motor backClaw(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines back claw motor
+pros::ADIAnalogOut pneumatic1(‘A’); // Pneumatic, change the port
 
 PIDController drivePID(0.1, 30)
 //type of object name (parameters)
@@ -203,6 +203,9 @@ void moveForwardPID(int inches) {
   left(0);
 }
 
+bool pneumaticVal = true;
+bool intakeVal = false;
+int intakeSpeed = 0;
 // Driver Control Functions
 
 void driveOP() { // change all button controls once robot is built and is being programmed
@@ -215,20 +218,33 @@ void driveOP() { // change all button controls once robot is built and is being 
     leftArm.move(-127);
     rightArm.move(-127);
   }
-  if (master.get_digital(DIGITAL_L1)) {// raise the back claw
-    backClaw.move(127);
+  if (master.get_digital(DIGITAL_L1)) {// pneumatic system
+    pneumaticVal = !pneumaticVal;
+	
+	wait(175);
   }
-  if (master.get_digital(DIGITAL_L2)) {// lower the back claw
+	pneumatic.set_value(pneumaticVal);
+  if (master.get_digital(DIGITAL_L2)) {// lntake
+    	intakeVal = !intakeVal;
+	wait(175);
+  }
+if (intakeVal) {
+	intakeSpeed = 127;
+}
+else if (!intakeVal){
+	intakeSpeed = 0;
+}
+  if(master.get_digital(DIGITAL_X)) { // if button x is pressed
     backClaw.move(-127);
   }
-  if (master.get_digital(DIGITAL_UP)) { // close pneumatic system
+if (master.get_digital(DIGITAL_A) {
+	backClaw.move(127);
 
-  }
-  if(master.get_digital(DIGITAL_X)) { // if button x is pressed
-    rightBack.move(127);
-  }
+}
+
   rightFront.move(master.get_analog(ANALOG_RIGHT_Y));
   rightBack.move(master.get_analog(ANALOG_RIGHT_Y));
   leftFront.move(master.get_analog(ANALOG_LEFT_Y));
   leftBack.move(master.get_analog(ANALOG_LEFT_Y));
+  intake.move(intakeSpeed);
 }
