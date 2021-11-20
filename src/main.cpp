@@ -82,4 +82,5 @@ void opcontrol() {
 		driveOP();
 		wait(20);
 	}
+	pros::delay(20);
 }

@@ -8,17 +8,17 @@
 pros::Imu inertial(8);
 
 //define Motors [FOR ALL OF THESE, CHANGE THE PORT, I AM NOT SURE ABOUT GEARSET, AND SOME MIGHT HAVE TO BE REVERSED]
-pros::Motor rightFront(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);//defines front motor on the right side of the drive base
-pros::Motor rightBack(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);//defines back motor on the right side of the drive base
-pros::Motor leftFront(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);//defines front motor on the left side of the drive base
-pros::Motor leftBack(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines back motor on the left side of the drive base
-pros::Motor leftArm(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);//defines left motor on the arm
-pros::Motor rightArm(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines right motor on the leftArm
-pros::Motor intake(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines motor that runs the intake
-pros::Motor backClaw(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines back claw motor
-pros::ADIAnalogOut pneumatic1(‘A’); // Pneumatic, change the port
-
-PIDController drivePID(0.1, 30)
+pros::Motor rightFront(4, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_DEGREES);//defines front motor on the right side of the drive base
+pros::Motor rightBack(3, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_DEGREES);//defines back motor on the right side of the drive base
+pros::Motor leftFront(10, pros::E_MOTOR_GEARSET_36, true, pros::E_MOTOR_ENCODER_DEGREES);//defines front motor on the left side of the drive base
+pros::Motor leftBack(2, pros::E_MOTOR_GEARSET_36, true, pros::E_MOTOR_ENCODER_DEGREES);// defines back motor on the left side of the drive base
+pros::Motor leftArm(7, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_DEGREES);//defines left motor on the arm
+pros::Motor rightArm(9, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines right motor on the leftArm
+pros::Motor intake(8, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines motor that runs the intake
+pros::Motor backClaw(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_DEGREES);// defines back claw motor ---  PORT IS CORRECT
+pros::ADIDigitalOut pneumatic1('B'); // pneumatic, change the port
+pros::ADIDigitalOut pneumatic2('C'); // pneumatic, change the port
+//PIDController drivePID(0.1, 30)
 //type of object name (parameters)
 
 //Variable and Constants
@@ -203,6 +203,11 @@ void moveForwardPID(int inches) {
   left(0);
 }
 
+void activatePistons(bool value){
+  pneumatic1.set_value(value);
+  pneumatic2.set_value(value);
+}
+
 bool pneumaticVal = true;
 bool intakeVal = false;
 int intakeSpeed = 0;
@@ -214,33 +219,47 @@ void driveOP() { // change all button controls once robot is built and is being 
     leftArm.move(127);
     rightArm.move(127);
   }
-  if (master.get_digital(DIGITAL_R2)) {// lower the main arm
+  else if (master.get_digital(DIGITAL_R2)) {// lower the main arm
     leftArm.move(-127);
     rightArm.move(-127);
   }
-  if (master.get_digital(DIGITAL_L1)) {// pneumatic system
-    pneumaticVal = !pneumaticVal;
-	
-	wait(175);
+  else{
+    leftArm.move(0);
+    rightArm.move(0);
+    leftArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    rightArm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
   }
-	pneumatic.set_value(pneumaticVal);
+  if (master.get_digital(DIGITAL_L1)) {// pneumatic system
+    activatePistons(!pneumaticVal);
+    pneumaticVal = !pneumaticVal;
+    wait(175);
+  }
   if (master.get_digital(DIGITAL_L2)) {// lntake
     	intakeVal = !intakeVal;
 	wait(175);
   }
-if (intakeVal) {
-	intakeSpeed = 127;
-}
-else if (!intakeVal){
-	intakeSpeed = 0;
-}
-  if(master.get_digital(DIGITAL_X)) { // if button x is pressed
-    backClaw.move(-127);
+  if (intakeVal) {
+  	intakeSpeed = 127;
   }
-if (master.get_digital(DIGITAL_A) {
-	backClaw.move(127);
+  else if (!intakeVal){
+  	intakeSpeed = 0;
+  }
 
-}
+
+  if(master.get_digital(DIGITAL_X)) { // if button x is pressed
+      backClaw.move(127);
+    }
+  else if(master.get_digital(DIGITAL_A)) {
+  	backClaw.move(-55);
+  }
+  else {
+    backClaw.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    backClaw.move(0);
+  }
+  // else if(!(master.get_digital(DIGITAL_A))) {
+  //   backClaw.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+  // }
+
 
   rightFront.move(master.get_analog(ANALOG_RIGHT_Y));
   rightBack.move(master.get_analog(ANALOG_RIGHT_Y));
